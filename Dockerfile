@@ -1,14 +1,19 @@
-# Use an official lightweight Python image for ARMv7
-FROM python:3.11
+# Use an official lightweight Python image
+FROM arm32v7/python:3.11
 
-# Install Python dependencies
-WORKDIR /usr/src/app
+# Install system dependencies and Rust
+RUN apt-get update && apt-get install -y \
+    curl build-essential \
+    && curl https://sh.rustup.rs -sSf | sh -s -- -y \
+    && . /root/.cargo/env \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt ./
+# Set the Rust environment path for subsequent commands
+ENV PATH="/root/.cargo/bin:$PATH"
 
-RUN pip install --no-cache-dir --upgrade pip \
-  && pip install --no-cache-dir -r requirements.txt \
-  && rm -f /usr/src/requirements.txt
+# Install dependencies
+RUN pip install --upgrade pip
+RUN pip install tinytuya paho-mqtt
 
 # Set working directory
 WORKDIR /app

@@ -1,25 +1,38 @@
-# Use an official lightweight Python image
-FROM --platform=linux/arm/v7 python:3.11
+# Use a base image with dynamic platform support
+FROM --platform=$TARGETPLATFORM python:3.11
 
-# Install system dependencies and Rust
-RUN apt-get update && apt-get install -y \
-    curl build-essential \
-    && curl https://sh.rustup.rs -sSf | sh -s -- -y \
-    && . /root/.cargo/env \
+# Declare platform argument
+ARG TARGETPLATFORM
+
+# Print the TARGETPLATFORM value during the build process
+RUN echo "Building for platform: $TARGETPLATFORM"
+
+# Below adjustments for linux/arm/v7
+# Install system dependencies and Rust for arm/v7 and arm64
+RUN if [ "$TARGETPLATFORM" = "linux/arm/v7" ] ; then \
+      apt-get update && apt-get install -y \
+      curl build-essential \
+      && curl https://sh.rustup.rs -sSf | sh -s -- -y \
+      && . /root/.cargo/env; \
+    else \
+      echo "Skipping Rust installation for $TARGETPLATFORM"; \
+    fi \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Set the Rust environment path for subsequent commands
-ENV PATH="/root/.cargo/bin:$PATH"
+# Set Rust environment path if needed
+RUN if [ "$TARGETPLATFORM" = "linux/arm/v7" ] ; then \
+      echo 'export PATH="/root/.cargo/bin:$PATH"' >> /etc/environment; \
+    fi
 
-# Install dependencies
-RUN pip install --upgrade pip
-RUN pip install tinytuya paho-mqtt
+# Upgrade pip and install Python dependencies from requirements.txt
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install --upgrade pip && pip install -r /tmp/requirements.txt
 
 # Set working directory
 WORKDIR /app
 
-# Copy the script into the container
-COPY script.py /app/script.py
+# Copy application code
+COPY src /app
 
 # Run the script
-CMD ["python", "/app/script.py"]
+CMD ["python", "/app/entrypoint.py"]

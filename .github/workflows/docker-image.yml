@@ -28,5 +28,3 @@ jobs:
        push: true
        platforms: linux/arm/v7
        tags: makuuu2903/tuya-2-mqtt:latest
-       build-args:
-         - PROGRESS=plain

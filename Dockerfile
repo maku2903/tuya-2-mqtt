@@ -1,13 +1,14 @@
 # Use an official lightweight Python image for ARMv7
-FROM arm32v7/python:3.11
+FROM python:3.11
 
-# Upgrade pip and install Python dependencies
-COPY requirements.txt /usr/src/
-RUN \
-    pip3 install --upgrade pip \
-    pip3 install \
-        -r /usr/src/requirements.txt \
-    && rm -f /usr/src/requirements.txt
+# Install Python dependencies
+WORKDIR /usr/src/app
+
+COPY requirements.txt ./
+
+RUN pip install --no-cache-dir --upgrade pip \
+  && pip install --no-cache-dir -r requirements.txt \
+  && rm -f /usr/src/requirements.txt
 
 # Set working directory
 WORKDIR /app

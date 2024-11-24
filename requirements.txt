@@ -1,0 +1,2 @@
+paho-mqtt==2.1.0
+tinytuya==1.15.1

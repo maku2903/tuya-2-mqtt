@@ -1,14 +1,17 @@
-# Use an official lightweight Python image
+# Use an official lightweight Python image for ARMv7
 FROM arm32v7/python:3.11
 
 # Install system dependencies and Rust
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl build-essential \
     && curl https://sh.rustup.rs -sSf | sh -s -- -y \
-    && . /root/.cargo/env \
+    && echo 'export PATH=/root/.cargo/bin:$PATH' >> /root/.bashrc \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install dependencies
+# Add Rust target for ARMv7
+RUN export PATH=/root/.cargo/bin:$PATH && rustup target add armv7-unknown-linux-gnueabihf
+
+# Upgrade pip and install Python dependencies
 RUN pip install --upgrade pip
 RUN pip install tinytuya paho-mqtt
 

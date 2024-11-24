@@ -1,5 +1,5 @@
 # Use an official lightweight Python image
-FROM arm32v7/python:3.11
+FROM --platform=linux/arm/v7 python:3.11
 
 # Install system dependencies and Rust
 RUN apt-get update && apt-get install -y \

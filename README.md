@@ -40,3 +40,6 @@ Create a `config.json` file with the following structure:
         "device_id": "your-device-id"
     }
 }
+```
+
+## Docker run

@@ -2,6 +2,28 @@
 
 `tuya-2-mqtt` is a Python-based Docker application designed to synchronize Tuya IoT devices with an MQTT broker. It bridges Tuya cloud device states to MQTT topics, allowing seamless integration with home automation systems.
 
+## Table of Contents
+
+- [tuya-2-mqtt](#tuya-2-mqtt)
+  - [Table of Contents](#table-of-contents)
+  - [Features](#features)
+  - [How It Works](#how-it-works)
+  - [Prerequisites](#prerequisites)
+  - [Configuration Model](#configuration-model)
+    - [MQTTConfig](#mqttconfig)
+    - [TuyaConfig](#tuyaconfig)
+    - [AppConfig](#appconfig)
+    - [Config](#config)
+  - [Configuration File Example](#configuration-file-example)
+  - [Keys in Topic Template](#keys-in-topic-template)
+  - [Environment Variables](#environment-variables)
+    - [Available Variables](#available-variables)
+    - [Example `.env` File](#example-env-file)
+  - [Deploying with Docker Compose](#deploying-with-docker-compose)
+    - [`docker-compose.yml`](#docker-composeyml)
+    - [`tuya2mqtt.yaml`](#tuya2mqttyaml)
+  - [License](#license)
+
 ## Features
 
 - **Configuration Management**: YAML-based configuration file.
@@ -188,26 +210,10 @@ tuya:
   region: "your_tuya_region"
   key: "your_tuya_api_key"
   secret: "your_tuya_api_secret"
-  device_id: "optional_device_id"
 
 app:
   period: 450
 ```
----
-
-## Key Functions
-
-### `load_config()`
-Loads and validates the YAML configuration file.
-
-### `render_topic(template_str: str, device: dict) -> str`
-Renders MQTT topics using Jinja templates and validates device keys.
-
-### `tuya_to_mqtt(config: Config)`
-Main function that:
-- Connects to the MQTT broker and Tuya Cloud.
-- Retrieves device states and publishes them to MQTT topics.
-
 ---
 
 ## License

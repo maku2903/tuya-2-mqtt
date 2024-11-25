@@ -42,3 +42,40 @@ jobs:
         tags: |
           makuuu2903/tuya-2-mqtt:${{ env.RELEASE_VERSION }}
           makuuu2903/tuya-2-mqtt:latest
+
+    - name: Install jq
+      run: sudo apt-get update && sudo apt-get install -y jq
+
+    - name: Update DockerHub Description
+      env:
+        DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+        DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      run: |
+        set -e
+        
+        # Check if README.md exists
+        if [ ! -f README.md ]; then
+          echo "README.md not found!"
+          exit 1
+        fi
+        
+        # Get README content
+        README_CONTENT=$(<README.md)
+        
+        # Prepare JSON payload
+        PAYLOAD=$(jq -n --arg full_description "$README_CONTENT" '{ full_description: $full_description }')
+        
+        # Update DockerHub description via API
+        RESPONSE=$(curl -s -o response.json -w "%{http_code}" -X PATCH \
+          -H "Content-Type: application/json" \
+          -H "Authorization: Bearer $DOCKERHUB_TOKEN" \
+          -d "$PAYLOAD" \
+          "https://hub.docker.com/v2/repositories/makuuu2903/tuya-2-mqtt/")
+        
+        if [ "$RESPONSE" -ne 200 ]; then
+          echo "Failed to update DockerHub description"
+          cat response.json
+          exit 1
+        else
+          echo "DockerHub description updated successfully!"
+        fi

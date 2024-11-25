@@ -1,4 +1,4 @@
-# tuya-2-mqtt
+# [tuya-2-mqtt](https://github.com/maku2903/tuya-2-mqtt)
 
 `tuya-2-mqtt` is a Python-based Docker application designed to synchronize Tuya IoT devices with an MQTT broker. It bridges Tuya cloud device states to MQTT topics, allowing seamless integration with home automation systems.
 

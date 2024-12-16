@@ -72,7 +72,7 @@ def thread_mqtt_listener(config: Config, mqtt_in_queue: queue.Queue):
             if len(topic_parts) == 5 and topic_parts[0] == "tele" and topic_parts[1] == "tuya" \
                     and topic_parts[2] == "cloud" and topic_parts[4] == "command":
                 # Extract device_id and process the message
-                device_id = topic_parts[3]
+                device_id = topic_parts[3]  # todo: validate device id, research needed
                 payload = json.loads(msg.payload.decode())
                 assert isinstance(payload, list), f"Payload should be list type, got: {payload}"
                 assert all(isinstance(payload_elem, dict) for payload_elem in payload), \

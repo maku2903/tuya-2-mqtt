@@ -23,7 +23,8 @@ jobs:
         if [[ "${RELEASE_VERSION}" == *RC* ]]; then
           echo "TAGS=makuuu2903/tuya-2-mqtt:${RELEASE_VERSION}" >> $GITHUB_ENV
         else
-          echo -e "TAGS=makuuu2903/tuya-2-mqtt:${RELEASE_VERSION}\nmakuuu2903/tuya-2-mqtt:latest" >> $GITHUB_ENV
+          echo "TAGS=makuuu2903/tuya-2-mqtt:${RELEASE_VERSION}" >> $GITHUB_ENV
+          echo "TAGS_LATEST=makuuu2903/tuya-2-mqtt:latest" >> $GITHUB_ENV
 
     - name: Login to DockerHub
       uses: docker/login-action@v3
@@ -49,6 +50,7 @@ jobs:
         platforms: linux/arm/v7,linux/arm64,linux/amd64
         tags: |
           ${{ env.TAGS }}
+          ${{ env.TAGS_LATEST || '' }}
 
     - name: Install jq
       run: sudo apt-get update && sudo apt-get install -y jq

@@ -13,11 +13,13 @@ import signal
 
 logger = setup_logger()
 
-# Queue of mqtt messages
+# FIFO Queue of mqtt messages
 mqtt_in_queue = queue.Queue()
 
+# Global event to stop all threads
 event_thread_stop = threading.Event()
-
+# todo: check proper MQTT client disconnects on thread kills.
+# todo: check exceptions propagations
 
 def load_config() -> Config:
     """Load configuration from a JSON file."""
@@ -82,7 +84,7 @@ def thread_mqtt_listener(config: Config, mqtt_in_queue: queue.Queue):
         except Exception as e:
             logger.error(f"Error processing MQTT message: {e}")
 
-    mqtt_client = mqtt.Client()  # todo: migrate for new paho api
+    mqtt_client = mqtt.Client()  # todo: migrate to new paho api
     try:
         mqtt_client.on_message = on_message
         if config.mqtt.user and config.mqtt.password:
@@ -147,6 +149,7 @@ def thread_mqtt_to_tuya_cloud(config: Config, mqtt_in_queue: queue.Queue):
             logger.debug(f"Command sent to Tuya: {device_id} -> {commands}, response: {response}")
             # todo: Somehow handle the response
             # todo: Handle not existent device_id
+            # todo: Handle tuya_client timeout
         except queue.Empty:
             time.sleep(1)  # Sleep to avoid tight loop
             pass  # No message in queue, continue
@@ -159,7 +162,7 @@ def thread_tuya_cloud_to_mqtt(config: Config):
 
     # Connect to MQTT Broker
     try:
-        mqtt_client = mqtt.Client()  # todo: migrate for new paho api
+        mqtt_client = mqtt.Client()  # todo: migrate to new paho api
         mqtt_user = config.mqtt.user.get_secret_value()
         mqtt_password = config.mqtt.password.get_secret_value() if config.mqtt.password is not None else None
         if mqtt_user and mqtt_password:

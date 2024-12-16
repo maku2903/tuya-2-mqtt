@@ -17,6 +17,14 @@ jobs:
       id: get_release
       run: echo "RELEASE_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
+    - name: Determine Docker Image Tags
+      id: set_tags
+      run: |
+        if [[ "${RELEASE_VERSION}" == *RC* ]]; then
+          echo "TAGS=makuuu2903/tuya-2-mqtt:${RELEASE_VERSION}" >> $GITHUB_ENV
+        else
+          echo "TAGS=makuuu2903/tuya-2-mqtt:${RELEASE_VERSION},makuuu2903/tuya-2-mqtt:latest" >> $GITHUB_ENV
+
     - name: Login to DockerHub
       uses: docker/login-action@v3
       with:
@@ -39,9 +47,7 @@ jobs:
         context: .
         push: true
         platforms: linux/arm/v7,linux/arm64,linux/amd64
-        tags: |
-          makuuu2903/tuya-2-mqtt:${{ env.RELEASE_VERSION }}
-          ${{ env.RELEASE_VERSION | contains('RC') == false && 'makuuu2903/tuya-2-mqtt:latest' || '' }}
+        tags: ${{ env.TAGS }}
 
     - name: Install jq
       run: sudo apt-get update && sudo apt-get install -y jq

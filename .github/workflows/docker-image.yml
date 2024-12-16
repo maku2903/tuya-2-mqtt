@@ -41,7 +41,7 @@ jobs:
         platforms: linux/arm/v7,linux/arm64,linux/amd64
         tags: |
           makuuu2903/tuya-2-mqtt:${{ env.RELEASE_VERSION }}
-          makuuu2903/tuya-2-mqtt:latest
+          ${{ env.RELEASE_VERSION | contains('RC') == false && 'makuuu2903/tuya-2-mqtt:latest' || '' }}
 
     - name: Install jq
       run: sudo apt-get update && sudo apt-get install -y jq

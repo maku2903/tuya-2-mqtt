@@ -58,6 +58,7 @@ def render_mqtt_topic(template_str: str, device: dict) -> str:
         logger.error(f"Error with device keys: {ke}", exc_info=True)
         raise
 
+
 def thread_mqtt_listener(config: Config, mqtt_in_queue: queue.Queue):
     """Thread: Listens for MQTT messages on specific topics and adds them to the queue."""
 
@@ -71,14 +72,17 @@ def thread_mqtt_listener(config: Config, mqtt_in_queue: queue.Queue):
                 # Extract device_id and process the message
                 device_id = topic_parts[3]
                 payload = json.loads(msg.payload.decode())
+                assert isinstance(payload, list), f"Payload should be list type, got: {payload}"
+                assert all(isinstance(payload_elem, dict) for payload_elem in payload), \
+                    f"Payload elements should be dict type, got: {payload}"
                 mqtt_in_queue.put({"topic": msg.topic, "device_id": device_id, "payload": payload})
-                logger.info(f"MQTT message received: {msg.topic} -> {payload}")
+                logger.debug(f"MQTT message received: {msg.topic} -> {payload}")
             else:
                 logger.debug(f"Ignored message with topic: {msg.topic}")
         except Exception as e:
             logger.error(f"Error processing MQTT message: {e}")
 
-    mqtt_client = mqtt.Client()
+    mqtt_client = mqtt.Client()  # todo: migrate for new paho api
     try:
         mqtt_client.on_message = on_message
         if config.mqtt.user and config.mqtt.password:
@@ -88,6 +92,7 @@ def thread_mqtt_listener(config: Config, mqtt_in_queue: queue.Queue):
         # Connect to the MQTT broker
         mqtt_client.connect(config.mqtt.broker, config.mqtt.port)
 
+        # todo: Change hardcoded topic pattern to user generated pattern
         # Subscribe to the specific topic pattern
         topic_pattern = "tele/tuya/cloud/+/command"  # "+" wildcard for <device_id>
         mqtt_client.subscribe(topic_pattern)
@@ -132,12 +137,16 @@ def thread_mqtt_to_tuya_cloud(config: Config, mqtt_in_queue: queue.Queue):
             logger.debug(f"Processing MQTT message: {mqtt_msg}")
 
             # Tuya API - sending
-            device_id = mqtt_msg["device_id"]  # todo: Handle not existent device_id?
+            device_id = mqtt_msg["device_id"]
             payload = mqtt_msg["payload"]
-            logger.debug(f"Sending command to Tuya: {device_id} -> {payload}")
-            response = tuya_client.sendcommand(deviceid=device_id, commands=payload)
-            logger.debug(f"Command sent to Tuya: {device_id} -> {payload}, response: {response}")
+            commands = {
+                "commands": payload
+            }
+            logger.debug(f"Sending commands to Tuya: {device_id} -> {commands}")
+            response = tuya_client.sendcommand(deviceid=device_id, commands=commands)
+            logger.debug(f"Command sent to Tuya: {device_id} -> {commands}, response: {response}")
             # todo: Somehow handle the response
+            # todo: Handle not existent device_id
         except queue.Empty:
             time.sleep(1)  # Sleep to avoid tight loop
             pass  # No message in queue, continue
@@ -150,7 +159,7 @@ def thread_tuya_cloud_to_mqtt(config: Config):
 
     # Connect to MQTT Broker
     try:
-        mqtt_client = mqtt.Client()
+        mqtt_client = mqtt.Client()  # todo: migrate for new paho api
         mqtt_user = config.mqtt.user.get_secret_value()
         mqtt_password = config.mqtt.password.get_secret_value() if config.mqtt.password is not None else None
         if mqtt_user and mqtt_password:

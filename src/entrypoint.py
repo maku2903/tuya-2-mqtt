@@ -127,6 +127,7 @@ def thread_mqtt_to_tuya_cloud(config: Config, mqtt_in_queue: queue.Queue):
             apiRegion=config.tuya.region,
             apiKey=config.tuya.key.get_secret_value(),
             apiSecret=config.tuya.secret.get_secret_value(),
+            new_sign_algorithm=True,
         )
     except Exception as e:
         logger.error(f"Error connecting to Tuya Cloud: {e}", exc_info=True)
@@ -144,8 +145,18 @@ def thread_mqtt_to_tuya_cloud(config: Config, mqtt_in_queue: queue.Queue):
             commands = {
                 "commands": payload
             }
+
+            devices = tuya_client.getdevices()
+            print(devices)
+            # Display Properties of Device
+            result = tuya_client.getproperties(device_id)
+            print("Properties of device:\n", result)
+
+            # Display Status of Device
+            result = tuya_client.getstatus(device_id)
+            print(result)
             logger.debug(f"Sending commands to Tuya: {device_id} -> {commands}")
-            response = tuya_client.sendcommand(deviceid=device_id, commands=commands)
+            response = tuya_client.sendcommand(device_id, commands)
             logger.debug(f"Command sent to Tuya: {device_id} -> {commands}, response: {response}")
             # todo: Somehow handle the response
             # todo: Handle not existent device_id
@@ -280,12 +291,12 @@ if __name__ == "__main__":
         threads.append(t)
         t.start()
 
-        t = threading.Thread(
-            target=thread_tuya_cloud_to_mqtt, args=(config,), daemon=True,
-            name="Thread_Tuya_Cloud_to_MQTT"
-        )
-        threads.append(t)
-        t.start()
+        # t = threading.Thread(
+        #     target=thread_tuya_cloud_to_mqtt, args=(config,), daemon=True,
+        #     name="Thread_Tuya_Cloud_to_MQTT"
+        # )
+        # threads.append(t)
+        # t.start()
 
         # Keep main thread alive
         while not event_thread_stop.is_set():
